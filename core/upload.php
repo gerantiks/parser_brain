@@ -11,7 +11,7 @@ if ($validation) {
     var_dump(move_uploaded_file($fileTmp, $fileDestination));
 } else {
     $_SESSION['message'] = "Невірний формат файлу. Завантажте його у форматі xlsx або xls.";
-    header('Location: index.php');
+    header('Location: ../front/index.php');
     exit;
 }
 

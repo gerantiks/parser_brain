@@ -16,16 +16,29 @@ class CurlRequest
         $this->option[$option] = $value;
     }
 
-    public function get($params):string  {
+    public function get($params = [], $decode = 0)  { //decode 0 возвращает json;  1 - декодированный массив
         $url = $this->buildUrl($params);
         $this->option[CURLOPT_HTTPGET] = true;
-        return $this->sendRequest($url);
+        if($decode === 0) {
+            $result = $this->sendRequest($this-> url);
+        } else {
+            $result = $this->sendRequest($this-> url);
+            $result = json_decode($result, true);
+        }
+        return $result;
+
     }
 
-    public function post($params = []):string  {
+    public function post($params = [], $decode = 0) {
         $this -> option[CURLOPT_POST] = true;
         $this -> option[CURLOPT_POSTFIELDS] = http_build_query($params);
-        return $this->sendRequest($this-> url);
+        if($decode === 0) {
+            $result = $this->sendRequest($this-> url);
+        } else {
+            $result = $this->sendRequest($this-> url);
+            $result = json_decode($result, true);
+        }
+        return $result;
     }
 
     private function buildUrl($params):string {
@@ -55,4 +68,34 @@ class CurlRequest
         return $response;
 
     }
+
+    public function MultiRequests($urls, $decode = 0)
+    {
+        $result = [];
+        $multiHandle = curl_multi_init();
+        $curlHandles = [];
+        foreach ($urls as $url) {
+            $handle = curl_init($url);
+            curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+            curl_multi_add_handle($multiHandle, $handle);
+            $curlHandles[] = $handle;
+        }
+    do {
+        $status = curl_multi_exec($multiHandle, $active);
+    } while ($status === CURLM_CALL_MULTI_PERFORM || $active);
+        foreach ($curlHandles as $handle) {
+            $item= curl_multi_getcontent($handle);
+            if($decode != 0) {
+                $result[] = json_decode($item, true);
+            } else {
+                $result[] = $item;
+            }
+            curl_multi_remove_handle($multiHandle, $handle);
+            curl_close($handle);
+        }
+
+    curl_multi_close($multiHandle);
+    return $result;
+    }
+
 }
