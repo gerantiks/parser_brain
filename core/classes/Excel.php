@@ -3,9 +3,12 @@
 namespace app;
 require_once('../vendor/autoload.php');
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Exception;
+
 class Excel
 {
     private string $path;
+    private $office;
     public function __construct($path)
     {
         $path = glob($path);
@@ -25,12 +28,11 @@ class Excel
         }
         return $itemsColumn;
     }
-    public function writeColumn($column, $value, $numberRow = 1): void
+    public function writeColumn($value, $column, $numberRow = 1): void
     {
-        $spreadsheet = IOFactory::load($this->path);
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setCellValue($column . $numberRow, $value);
         try {
+            $spreadsheet = IOFactory::load($this->path);
+            $spreadsheet->getActiveSheet()->setCellValue($column . $numberRow, $value);
             $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
             $writer->save($this->path);
             $spreadsheet->disconnectWorksheets();
@@ -38,5 +40,17 @@ class Excel
             die("Error write: " . $e);
         }
     }
+    public function writeArray($data, $row, $startCell = 'A')
+    {
+        try {
+            $spreadsheet = IOFactory::load($this->path);
+            $spreadsheet->getActiveSheet()->fromArray($data, null, $startCell . $row);
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $writer->save($this->path);
+        } catch (Exception $e) {
+            die("Error write: " . $e);
+        }
+    }
+
 
 }

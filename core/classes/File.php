@@ -1,8 +1,8 @@
 <?php
 
-namespace app;
+namespace core;
 
-class Files
+class File
 {
     private string $fileName;
 
